@@ -5,7 +5,7 @@ namespace DisjointRegions;
 use DisjointRegions\Model\RegionFinder;
 use DisjointRegions\Tests\MatrixProvider;
 
-require_once 'config/require.php';
+require_once 'config/loader.php';
 
 /**
  * Run this script
