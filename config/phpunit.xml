@@ -4,7 +4,7 @@
 
     <testsuites>
         <testsuite name="Disjoint Regions Test Suit">
-            <directory>../Tests</directory>
+            <directory>../src/Tests</directory>
         </testsuite>
     </testsuites>
 
