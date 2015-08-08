@@ -1,15 +1,13 @@
 <?php
 
-namespace DisjointRegions\Tests\Service;
+namespace DisjointRegions\Tests;
 
-use DisjointRegions\Service\DisjointRegions as DisjointRegionsService;
-
-use \Mockery as m;
+use DisjointRegions\DisjointRegionsService;
 
 /**
  * @group Unit
  */
-class DisjointRegionsTest extends \PHPUnit_Framework_TestCase
+class DisjointRegionsServiceTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var DisjointRegionsService
@@ -19,6 +17,15 @@ class DisjointRegionsTest extends \PHPUnit_Framework_TestCase
     public function setup()
     {
         $this->service = new DisjointRegionsService();
+    }
+
+    public function test_it_returns_1_for_square_matrix_of_size_1()
+    {
+        $matrix = ["label"];
+
+        $result = $this->service->getRegionCounts($matrix);
+
+        $this->assertTrue(1 == $result["label"]);
     }
 
     public function test_it_computes_correct_number_of_regions_for_square_matrix_of_size_4_with_2_labels()

@@ -1,11 +1,11 @@
 <?php
 
-namespace DisjointRegions\Model;
+namespace DisjointRegions;
 
 /**
- * Algorithm for finding disjoint regions in a matrix
+ * Calculate disjoint regions in a matrix
  */
-class RegionFinder
+class DisjointRegionsService
 {
     /**
      * @var array Region matrix
@@ -15,7 +15,27 @@ class RegionFinder
     /**
      * @var array Region map
      */
-    private $regionsByValue;
+    private $regionsByLabel;
+
+    /**
+     * @param array $matrix
+     * @return array  Region counts by label
+     */
+    public function getRegionCounts($matrix)
+    {
+        if (1 == count($matrix)) {
+            return [$matrix[0] => 1];
+        }
+
+        $regionsByLabel =  $this->computeRegions($matrix);
+        $regionCounts = [];
+
+        foreach ($regionsByLabel as $label => $regions) {
+            $regionCounts[$label] = count(array_unique($regions));
+        }
+
+        return $regionCounts;
+    }
 
     /**
      * Create the "region map" --- a set of elements of the form
@@ -33,7 +53,7 @@ class RegionFinder
         $this->matrix = $matrix;
         $matrixHeight = count($this->matrix);
         $matrixLength = count($this->matrix[0]);
-        $this->regionsByValue = array();
+        $this->regionsByLabel = array();
 
         $this->initRegionMap($matrixHeight, $matrixLength);
 
@@ -87,7 +107,7 @@ class RegionFinder
 
         $this->matrix = null;
 
-        return $this->regionsByValue;
+        return $this->regionsByLabel;
     }
 
     /**
@@ -109,10 +129,10 @@ class RegionFinder
                 $currentId = $this->getRecordId($i, $j);
                 // Then add it to the array of regions
 
-                if (!array_key_exists($current, $this->regionsByValue)) {
+                if (!array_key_exists($current, $this->regionsByLabel)) {
                     // This way we will be able to count all kinds of regions,
                     // not only those labeled with 1
-                    $this->regionsByValue[$current] = array();
+                    $this->regionsByLabel[$current] = array();
                 }
 
                 $this->updateRegionMap($current, $currentId, $currentId);
@@ -142,7 +162,7 @@ class RegionFinder
      */
     private function updateRegionMap($value, $id, $maxElementId)
     {
-        $this->regionsByValue[$value][$id] = $maxElementId;
+        $this->regionsByLabel[$value][$id] = $maxElementId;
     }
 
     /**
@@ -154,8 +174,8 @@ class RegionFinder
      * @param int $neighbourRow  Row of the neighbour
      * @param int $neighbourCol  Column of the neighbour
      */
-    private function compareWithNeighbour($currentRow, $currentCol,
-        $neighbourRow, $neighbourCol
+    private function compareWithNeighbour(
+        $currentRow, $currentCol, $neighbourRow, $neighbourCol
     ){
         $current = $this->matrix[$currentRow][$currentCol];
         $neighbour = $this->matrix[$neighbourRow][$neighbourCol];
@@ -167,8 +187,8 @@ class RegionFinder
             $currentId = $this->getRecordId($currentRow, $currentCol);
             $neighbourId = $this->getRecordId($neighbourRow, $neighbourCol);
 
-            $currentMax = $this->regionsByValue[$current][$currentId];
-            $neighbourMax = $this->regionsByValue[$current][$neighbourId];
+            $currentMax = $this->regionsByLabel[$current][$currentId];
+            $neighbourMax = $this->regionsByLabel[$current][$neighbourId];
 
             // Element in the region with the biggest index
             $max = max($currentMax, $neighbourMax);
