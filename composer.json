@@ -1,0 +1,11 @@
+{
+    "name": "disjoint-regions",
+    "license": "MIT",
+    "type": "project",
+    "description": "Counting disjoint regions",
+    "require": {
+        "php": ">=5.4.0",
+        "mockery/mockery": "dev-master",
+        "phpunit/phpunit": "4.2.*"
+    }
+}
