@@ -1,4 +1,5 @@
 <?php
+
 namespace DisjointRegions\Model;
 
 /**
@@ -16,23 +17,20 @@ class RegionFinder
      */
     private $regionsByValue;
 
-    public function __construct(array $regionMatrix)
-    {
-        $this->matrix = $regionMatrix;
-    }
-
     /**
      * Create the "region map" --- a set of elements of the form
-     * (value, index, number), where:
+     * (label, index, number), where:
      *
-     * value  --- value that originally marked this area in the data matrix (like 0,1,..),
+     * label  --- label that originally marked this area in the data matrix (like 0,1,..),
      * index  --- unique id of a record from the data matrix,
      * number --- maximum id among the elements belonging to this area.
      *
+     * @param array $matrix
      * @return array
      */
-    public function computeRegions()
+    public function computeRegions($matrix)
     {
+        $this->matrix = $matrix;
         $matrixHeight = count($this->matrix);
         $matrixLength = count($this->matrix[0]);
         $this->regionsByValue = array();
@@ -86,6 +84,8 @@ class RegionFinder
                 }
             }
         }
+
+        $this->matrix = null;
 
         return $this->regionsByValue;
     }
