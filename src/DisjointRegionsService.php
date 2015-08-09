@@ -8,7 +8,7 @@ namespace DisjointRegions;
 class DisjointRegionsService
 {
     /**
-     * @var array Region matrix
+     * @var array Labeled matrix
      */
     private $matrix;
 
@@ -23,8 +23,11 @@ class DisjointRegionsService
      */
     public function getRegionCounts($matrix)
     {
-        // If we're dealing with a 1-dimensional array, we turn it into a 2-dimensional one
         if (!is_array($matrix[0])) {
+            /*
+             * If we're dealing with a 1-dimensional array, we turn it into
+             * a 2-dimensional one
+             */
             $matrix = [$matrix];
         }
 
@@ -52,150 +55,116 @@ class DisjointRegionsService
     public function computeRegions($matrix)
     {
         $this->matrix = $matrix;
+        $this->regionsByLabel = [];
+
         $matrixHeight = count($this->matrix);
         $matrixLength = count($this->matrix[0]);
-        $this->regionsByLabel = array();
-
-        $this->initRegionMap($matrixHeight, $matrixLength);
-
-        /*
-         * Now, find the relationships between the matrix elements
-         */
 
         // Start from the bottom-right corner of the matrix
-        for ($i = $matrixHeight - 1 ; 0 <= $i; --$i) {
-            for ($j = $matrixLength - 1; 0 <= $j; --$j) {
+        for ($row = $matrixHeight - 1 ; 0 <= $row; --$row) {
+            for ($col = $matrixLength - 1; 0 <= $col; --$col) {
 
-                // Current element's coordinates
-                $currentRow = $i;
-                $currentCol = $j;
+                $label = $this->matrix[$row][$col];
+                $currentRecordId = $this->getRecordId($row, $col);
+                /*
+                 * Init the region for the current record with the unique id of this record
+                 */
+                $this->updateRegionMap($label, $currentRecordId, $currentRecordId);
 
-                $rightNeighbourExists = $currentCol + 1 < $matrixLength;
-                $southNeighbourExists = $currentRow + 1 < $matrixHeight;
+                $southNeighbourExists = $row + 1 < $matrixHeight;
+                $rightNeighbourExists = $col + 1 < $matrixLength;
 
-                // Compare the current element with its right neighbour
-                if ($rightNeighbourExists) {
-                    // Right neighbour's coordinates
-                    $rightNeighbourRow = $currentRow;
-                    $rightNeighbourCol = $currentCol + 1;
+                /*
+                 * Compare the current element with its southern neighbour
+                 */
+                $southUpdated = false;
 
-                    $this->compareWithNeighbour($currentRow, $currentCol,
-                        $rightNeighbourRow, $rightNeighbourCol
-                    );
-                }
-
-                // Compare the current element with its southern neighbour
                 if ($southNeighbourExists) {
-                    // Southern neighbour's coordinates
-                    $southNeighbourRow = $currentRow + 1;
-                    $southNeighbourCol = $currentCol;
-
-                    $this->compareWithNeighbour($currentRow, $currentCol,
-                        $southNeighbourRow, $southNeighbourCol
-                    );
+                    $southRow = $row + 1;
+                    $southCol = $col;
+                    $southUpdated = $this->updateRegionsForNeighbouringRecords($row, $col, $southRow, $southCol);
                 }
+                /*
+                 * Compare the current element with its right neighbour
+                 */
+                $rightUpdated = false;
 
-                // Compare the neighbours
-                if ($rightNeighbourExists && $southNeighbourExists) {
-                    // If both neighbours exist, compare them as well and
-                    // update, if needed
-                    $this->compareWithNeighbour($rightNeighbourRow, $rightNeighbourCol,
-                        $southNeighbourRow, $southNeighbourCol
-                    );
+                if ($rightNeighbourExists) {
+                    $rightRow = $row;
+                    $rightCol = $col + 1;
+                    $rightUpdated = $this->updateRegionsForNeighbouringRecords($row, $col, $rightRow, $rightCol);
+                }
+                /*
+                 * Compare the southern and the right neighbour, if both have been updated
+                 */
+                if ($southUpdated && $rightUpdated) {
+                    $this->updateRegionsForNeighbouringRecords($southRow, $southCol, $rightRow, $rightCol);
                 }
             }
         }
-
-        $this->matrix = null;
 
         return $this->regionsByLabel;
     }
 
     /**
-     * Create a start region for each element of the matrix:
-     * for each element we will store only the maximum id among the elements
-     * belonging to this region --- at the start all regions are single-element
-     * regions
+     * Calculate a unique id for a matrix record (row, column)
      *
-     * @param int $matrixHeight
-     * @param int $matrixLength
+     * @param int $row     Record row
+     * @param int $column  Record column
+     * @return int  Computed id
      */
-    private function initRegionMap($matrixHeight, $matrixLength)
+    private function getRecordId($row, $column)
     {
-        for ($i=0; $i < $matrixHeight; ++$i) {
-            for ($j=0; $j < $matrixLength; ++$j) {
-                // Current matrix record
-                $current = $this->matrix[$i][$j];
-                // Create a unique id for this record
-                $currentId = $this->getRecordId($i, $j);
-                // Then add it to the array of regions
+        $matrixLength = count($this->matrix[0]);
 
-                if (!array_key_exists($current, $this->regionsByLabel)) {
-                    // This way we will be able to count all kinds of regions,
-                    // not only those labeled with 1
-                    $this->regionsByLabel[$current] = array();
-                }
-
-                $this->updateRegionMap($current, $currentId, $currentId);
-            }
-        }
+        return $row * $matrixLength + $column;
     }
 
     /**
-     * Calculate a unique id for a matrix record (i,j)
+     * Update the entry in the region map for a particular matrix record
      *
-     * @param int $i  Record row
-     * @param int $j  Record column
-     * @return int    Computed id
+     * @param mixed $label   Record's value in the original matrix
+     * @param int   $id      Record's unique id
+     * @param int   $region  Maximum id of the records that belong to the same region as this record
      */
-    private function getRecordId($i, $j)
+    private function updateRegionMap($label, $id, $region)
     {
-        return $i * 10 + $j;
+        $this->regionsByLabel[$label][$id] = $region;
     }
 
     /**
-     * Update the entry in the region map for a particular record
+     * Compare the specified records' labels
+     * and update their regions if they belong to the same one
      *
-     * @param mixed $value         Record's value in the matrix
-     * @param int   $id            Unique id of the record
-     * @param int   $maxElementId  Maximum value of the unique ids among the
-     * elements that belong to this region
+     * @param int $row
+     * @param int $col
+     * @param int $neighbourRow
+     * @param int $neighbourCol
+     * @return bool  Whether the records had their regions updated
      */
-    private function updateRegionMap($value, $id, $maxElementId)
-    {
-        $this->regionsByLabel[$value][$id] = $maxElementId;
-    }
+    private function updateRegionsForNeighbouringRecords(
+        $row, $col, $neighbourRow, $neighbourCol
+    ) {
+        $label = $this->matrix[$row][$col];
+        $neighbourLabel = $this->matrix[$neighbourRow][$neighbourCol];
 
-    /**
-     * Compare a matrix record with its neighbour and update the regions array
-     * afterward
-     *
-     * @param int $currentRow    Row of the current element
-     * @param int $currentCol    Column of the current element
-     * @param int $neighbourRow  Row of the neighbour
-     * @param int $neighbourCol  Column of the neighbour
-     */
-    private function compareWithNeighbour(
-        $currentRow, $currentCol, $neighbourRow, $neighbourCol
-    ){
-        $current = $this->matrix[$currentRow][$currentCol];
-        $neighbour = $this->matrix[$neighbourRow][$neighbourCol];
+        if ($label == $neighbourLabel) {
+            $id = $this->getRecordId($row, $col);
+            $region = $this->regionsByLabel[$label][$id];
 
-        if ($current == $neighbour) {
-            // If they are labeled with the same value, they belong to
-            // the same region
-
-            $currentId = $this->getRecordId($currentRow, $currentCol);
             $neighbourId = $this->getRecordId($neighbourRow, $neighbourCol);
+            $neighbourRegion = $this->regionsByLabel[$label][$neighbourId];
 
-            $currentMax = $this->regionsByLabel[$current][$currentId];
-            $neighbourMax = $this->regionsByLabel[$current][$neighbourId];
+            $region = max($region, $neighbourRegion);
 
-            // Element in the region with the biggest index
-            $max = max($currentMax, $neighbourMax);
-            // Mark both elements as being in the same region
-            $this->updateRegionMap($current, $currentId, $max);
-            $this->updateRegionMap($current, $neighbourId, $max);
+            $this->updateRegionMap($label, $id, $region);
+            $this->updateRegionMap($label, $neighbourId, $region);
+
+            // Regions updated
+            return true;
         }
+
+        // Nothing updated
+        return false;
     }
 }

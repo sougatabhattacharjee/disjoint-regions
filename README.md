@@ -2,11 +2,6 @@ disjoint-regions
 ===========
 
 
-**UPDATE:** *I've just found a bug in this solution of mine from last year. The
-problem concerns diagonal values not being regarded as neighbours. I'm going to
-improve it.*
-
-
 This is my solution to the problem of finding the number of disjoint regions in
 a matrix, described in the *Task specification*.
 

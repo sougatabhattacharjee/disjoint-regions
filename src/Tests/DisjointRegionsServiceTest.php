@@ -96,15 +96,15 @@ class DisjointRegionsServiceTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(1 == $result['A']);
         $this->assertTrue(1 == $result['B']);
 
-//        $matrix = [
-//            ['A', 'B'],
-//            ['B', 'A']
-//        ];
-//
-//        $result = $this->service->getRegionCounts($matrix);
-//
-//        $this->assertTrue(2 == $result['A']);
-//        $this->assertTrue(2 == $result['B']);
+        $matrix = [
+            ['A', 'B'],
+            ['B', 'A']
+        ];
+
+        $result = $this->service->getRegionCounts($matrix);
+
+        $this->assertTrue(2 == $result['A']);
+        $this->assertTrue(2 == $result['B']);
 
         /*
          * Test case: 3 labels
@@ -147,8 +147,74 @@ class DisjointRegionsServiceTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(1 == $result['D']);
     }
 
-    public function test_it_computes_correct_number_of_regions_for_square_matrix_of_size_4_with_2_labels()
+    public function test_it_computes_correct_number_of_regions_for_square_matrix_of_size_3()
     {
+        /*
+         * Test case: 2 labels
+         */
+        $matrix = [
+            ['*', '@', '@'],
+            ['@', '*', '@'],
+            ['@', '*', '@']
+        ];
+
+        $result = $this->service->getRegionCounts($matrix);
+
+        $this->assertTrue(2 == $result['*']);
+        $this->assertTrue(2 == $result['@']);
+
+        $matrix = [
+            ['*', '@', '@'],
+            ['@', '*', '@'],
+            ['@', '*', '*']
+        ];
+
+        $result = $this->service->getRegionCounts($matrix);
+
+        $this->assertTrue(2 == $result['*']);
+        $this->assertTrue(2 == $result['@']);
+
+        $matrix = [
+            ['*', '@', '*'],
+            ['@', '*', '@'],
+            ['*', '@', '@']
+        ];
+
+        $result = $this->service->getRegionCounts($matrix);
+
+        $this->assertTrue(4 == $result['*']);
+        $this->assertTrue(3 == $result['@']);
+
+        $matrix = [
+            ['*', '@', '*'],
+            ['@', '*', '@'],
+            ['*', '@', '*']
+        ];
+
+        $result = $this->service->getRegionCounts($matrix);
+
+        $this->assertTrue(5 == $result['*']);
+        $this->assertTrue(4 == $result['@']);
+    }
+
+    public function test_it_computes_correct_number_of_regions_for_square_matrix_of_size_4()
+    {
+        /*
+         * Test case: 2 labels
+         */
+
+        $matrix = [
+            [1,1,1,0],
+            [1,0,1,1],
+            [0,1,0,1],
+            [0,0,0,0]
+        ];
+
+        $result = $this->service->getRegionCounts($matrix);
+
+        $this->assertTrue(2 == $result[1]);
+        $this->assertTrue(3 == $result[0]);
+
         /*
          * Task's specification test case no. 1
          */
@@ -195,8 +261,11 @@ class DisjointRegionsServiceTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(1 == $result[0]);
     }
 
-    public function test_it_computes_correct_number_of_regions_for_not_square_matrix_of_size_12x11_with_4_labels()
+    public function test_it_computes_correct_number_of_regions_for_NxM_matrix()
     {
+        /*
+         * Test case: 4 labels
+         */
         $matrix = [
             ["Ali","Dan","Bob","Bob","Ali","Ali","Ali","Tom","Tom","Dan","Bob"],
             ["Ali","Dan","Dan","Bob","Dan","Dan","Ali","Dan","Dan","Dan","Dan"],
@@ -214,9 +283,9 @@ class DisjointRegionsServiceTest extends \PHPUnit_Framework_TestCase
 
         $result = $this->service->getRegionCounts($matrix);
 
-        $this->assertTrue(5 == $result["Ali"]);
+        $this->assertTrue(7 == $result["Ali"]);
         $this->assertTrue(8 == $result["Bob"]);
-        $this->assertTrue(6 == $result["Dan"]);
+        $this->assertTrue(7 == $result["Dan"]);
         $this->assertTrue(4 == $result["Tom"]);
     }
 }
