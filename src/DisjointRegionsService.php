@@ -23,8 +23,9 @@ class DisjointRegionsService
      */
     public function getRegionCounts($matrix)
     {
-        if (1 == count($matrix)) {
-            return [$matrix[0] => 1];
+        // If we're dealing with a 1-dimensional array, we turn it into a 2-dimensional one
+        if (!is_array($matrix[0])) {
+            $matrix = [$matrix];
         }
 
         $regionsByLabel =  $this->computeRegions($matrix);
